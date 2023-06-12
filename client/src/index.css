@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input {
+  @apply w-full border mb-2 py-2 px-3 rounded-2xl text-black focus:font-medium placeholder:text-slate-600;
+}
+
+button.primary {
+  @apply bg-primary py-2 text-black font-semibold rounded-2xl w-full;
+}
