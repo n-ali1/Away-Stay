@@ -11,7 +11,7 @@ const RegisterPage = () => {
   });
   const [cPass, setCPass] = useState("");
   const [isShown, setIsShown] = useState(false)
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState({});
 
   let status = {}
 
@@ -36,7 +36,6 @@ const RegisterPage = () => {
         console.error(error);
         status = {error: true, msg: "Registration Failed. Please try again"}
       }
-      // console.log(msg);
     }
     setIsShown(true)
     setMsg(status);
@@ -89,7 +88,7 @@ const RegisterPage = () => {
             onChange={(e) => setCPass(e.target.value)}
             />
             {isShown && 
-            <div className={`w-full p-3 mb-2 rounded-2xl ${msg.error?"bg-red-900":"bg-green-900"}`}>
+            <div className={`w-[28rem] p-2 mb-2 rounded-2xl ${msg.error?"bg-red-900":"bg-green-900"}`}>
             {msg.msg}
             </div>}
           <button className="primary">Continue</button>

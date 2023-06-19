@@ -28,6 +28,7 @@ mongoose.connect(process.env.MONGO_URL)
 
 // Define routes
 app.use('/register', require('./routes/register')); // Route for registering users
+app.use('/login', require('./routes/login')); // Route for logging in users
 
 // Start the server
 const port = process.env.PORT || 3000;

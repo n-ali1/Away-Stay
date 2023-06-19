@@ -2,8 +2,11 @@ import { ReactComponent as Logo } from "../assets/logo.svg";
 import { ReactComponent as SearchIcon } from "../assets/search.svg";
 import { ReactComponent as AccountIcon } from "../assets/account.svg";
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "../UserContext";
 
 const Header = () => {
+  const {user} = useContext(UserContext)
   return (
     <header className="xl:px-20 px-10 flex justify-between bg-third">
       <Link to="/" className="flex items-center gap-2">
@@ -28,6 +31,9 @@ const Header = () => {
       <div className="flex border border-gray-400 items-center justify-center rounded-full h-12 w-12 my-auto hover:shadow-md hover:shadow-second">
         <Link to={"/login"}>
           <AccountIcon className="w-9 stroke-primary stroke-2 rounded-full" />
+          {!!user && 
+          <div>{user.fname}</div>
+          }
         </Link>
       </div>
     </header>
