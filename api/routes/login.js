@@ -27,11 +27,23 @@ router.post("/", async (req, res) => {
         res.status(401).json("incorrect pass");
       }
     } else {
-      res.json("not found");
+      res.status(401).json("not found");
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
+router.get("/profile", (req, res) => {
+  const { token } = req.cookies;
+  if (token) {
+    jwt.verify(token, jwtSecret, {}, async (err, user) => {
+      if (err) throw err;
+      const userData = await User.findById(user.id, "_id email fname lname")
+      res.json(userData);
+    });
+  } else {
+    res.json(null);
+  }
+});
 module.exports = router;

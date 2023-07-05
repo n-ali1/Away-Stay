@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser")
 require("dotenv").config();
 
 // Create Express app
@@ -11,6 +12,7 @@ app.use(cors({
     credentials: true,
     origin: "http://localhost:5173",
   }));
+app.use(cookieParser())
 app.use(express.json());
 
 // Connect to MongoDB
