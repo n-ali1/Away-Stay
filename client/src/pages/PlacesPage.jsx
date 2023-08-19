@@ -1,9 +1,9 @@
 import { Link, useParams } from "react-router-dom";
 import { useState } from "react";
-import axios from "axios"
+import Perks from "../components/Perks";
+import axios from "axios";
 import { ReactComponent as PlusIcon } from "../assets/plus.svg";
 import { ReactComponent as UploadIcon } from "../assets/upload.svg";
-import Perks from "../components/Perks";
 
 const PlacesPage = () => {
   let { action } = useParams();
@@ -14,12 +14,12 @@ const PlacesPage = () => {
     photoLink: "",
     photos: [],
     description: "",
+    perks: [],
     extra: "",
     guests: "",
     checkIn: "",
     checkOut: "",
   });
-  const [perks, setPerks] = useState([]);
 
   const inputHeader = (text) => <h2 className="text-2xl">{text}</h2>;
   const inputDesc = (text) => <p className="text-sm text-gray-400">{text}</p>;
@@ -36,10 +36,32 @@ const PlacesPage = () => {
   };
 
   const addPhotoLink = async (e) => {
-    e.preventDefault()
-    await axios.post("/upload-photo", {link: input.photoLink})
-  }
-  console.log(action);
+    e.preventDefault();
+    const { data: filename } = await axios.post("/upload-photo/link", {
+      link: input.photoLink,
+    });
+    setInput((prevInput) => ({
+      ...prevInput,
+      photoLink: "",
+      photos: [...prevInput.photos, filename],
+    }));
+  };
+
+  const uploadPhoto = async (e) => {
+    const { files } = e.target;
+    const data = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      data.append("photos", files[i]);
+    }
+    const { data: filenames } = await axios.post("/upload-photo/upload", data, {
+      headers: { "Content-type": "multipart/form-data" },
+    });
+    setInput((prevInput) => ({
+      ...prevInput,
+      photos: [...prevInput.photos, ...filenames],
+    }));
+  };
+
   return (
     <div>
       {action !== "new" && (
@@ -54,7 +76,7 @@ const PlacesPage = () => {
         </div>
       )}
       {action === "new" && (
-        <form className="mx-auto max-w-lg ">
+        <form className="mx-auto max-w-2xl ">
           {inputInfo("Title", "Add a short and concise title")}
           <input
             type="text"
@@ -80,14 +102,32 @@ const PlacesPage = () => {
               onChange={handleChange}
               placeholder="Add using a link"
             />
-            <button onClick={addPhotoLink} className="h-11 px-2 bg-third border border-gray-600 text-gray-300 rounded-2xl mb-2 ">
+            <button
+              onClick={addPhotoLink}
+              className="h-11 px-2 bg-third border border-gray-600 text-gray-300 rounded-2xl mb-2 "
+            >
               Add&nbsp;Photo
             </button>
           </div>
-          <div className="grid grid-cols-3 xl:grid-cols-6 mb-2">
-            <button className="py-4 bg-third border border-gray-600 text-gray-300 rounded-xl flex justify-center gap-2">
+          <div className="grid grid-cols-3 xl:grid-cols-4 mb-2 gap-2">
+            {input.photos.length > 0 &&
+              input.photos.map((photo, index) => (
+                <div key={index}>
+                  <img
+                    className="h-36 w-full rounded-2xl object-cover"
+                    src={"http://localhost:3000/routes/uploads/" + photo}
+                  />
+                </div>
+              ))}
+            <label className="h-36 cursor-pointer py-4 xl:px-2 bg-third border border-gray-600 text-gray-300 rounded-xl flex justify-center items-center gap-2">
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={uploadPhoto}
+              />
               <UploadIcon className="w-6 stroke-2" /> Upload
-            </button>
+            </label>
           </div>
           {inputInfo("Description", "Add a full description of your place")}
           <textarea
@@ -99,7 +139,7 @@ const PlacesPage = () => {
             placeholder="Description, e.g. My Lovely Apartment"
           />
           {inputInfo("Perks", "Select all that apply")}
-          <Perks selected={perks} onChange={setPerks} />
+          <Perks selected={input.perks} onChange={setInput} />
           {inputInfo("Extra Information", "Add rules and things to know")}
           <textarea
             type="text"
@@ -127,7 +167,7 @@ const PlacesPage = () => {
             <div>
               <h3>Check In Time</h3>
               <input
-                type="text"
+                type="datetime-local"
                 name="checkIn"
                 value={input.checkIn}
                 onChange={handleChange}
@@ -136,7 +176,7 @@ const PlacesPage = () => {
             <div>
               <h3>Check Out Time</h3>
               <input
-                type="text"
+                type="datetime-local"
                 name="checkOut"
                 value={input.checkOut}
                 onChange={handleChange}
