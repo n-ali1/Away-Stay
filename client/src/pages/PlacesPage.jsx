@@ -1,9 +1,9 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import PhotoUpload from "../components/PhotoUpload";
 import Perks from "../components/Perks";
 import axios from "axios";
 import { ReactComponent as PlusIcon } from "../assets/plus.svg";
-import { ReactComponent as UploadIcon } from "../assets/upload.svg";
 
 const PlacesPage = () => {
   let { action } = useParams();
@@ -20,6 +20,10 @@ const PlacesPage = () => {
     checkIn: "",
     checkOut: "",
   });
+  const [msg, setMsg] = useState({});
+  const [redirect, setRedirect] = useState(false);
+
+  let status = {};
 
   const inputHeader = (text) => <h2 className="text-2xl">{text}</h2>;
   const inputDesc = (text) => <p className="text-sm text-gray-400">{text}</p>;
@@ -29,39 +33,34 @@ const PlacesPage = () => {
       {inputDesc(desc)}
     </>
   );
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setInput((prevInput) => ({ ...prevInput, [name]: value }));
   };
 
-  const addPhotoLink = async (e) => {
-    e.preventDefault();
-    const { data: filename } = await axios.post("/upload-photo/link", {
-      link: input.photoLink,
-    });
-    setInput((prevInput) => ({
-      ...prevInput,
-      photoLink: "",
-      photos: [...prevInput.photos, filename],
-    }));
-  };
-
-  const uploadPhoto = async (e) => {
-    const { files } = e.target;
-    const data = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      data.append("photos", files[i]);
+  const addNewPlace = async (e) => {
+    e.preventDefault()
+    const placeData = input;
+    if (Object.values(placeData).some((val, i) => val === "" && i !== 2 )) {
+      status = { error: true, msg: "Please fill in all the feilds." };
+    } else {
+      try {
+        const res = await axios.post("/places", placeData);
+        console.log(res.data)
+        setRedirect(true);
+      } catch (error) {
+        console.error(error);
+        status = { error: true, msg: "Place entry not saved, please try again." };
+      }
     }
-    const { data: filenames } = await axios.post("/upload-photo/upload", data, {
-      headers: { "Content-type": "multipart/form-data" },
-    });
-    setInput((prevInput) => ({
-      ...prevInput,
-      photos: [...prevInput.photos, ...filenames],
-    }));
-  };
+    setMsg(status)
+  }
 
+  if (redirect) {
+    return <Navigate to={"/account/places"} />;
+  }
+  
   return (
     <div>
       {action !== "new" && (
@@ -76,7 +75,12 @@ const PlacesPage = () => {
         </div>
       )}
       {action === "new" && (
-        <form className="mx-auto max-w-2xl ">
+        <form onSubmit={addNewPlace} className="mx-auto max-w-2xl ">
+          {msg.error && (
+            <div className="text-center py-2 mb-2 rounded-2xl bg-red-900 mx-auto">
+              {msg.msg}
+            </div>
+          )}
           {inputInfo("Title", "Add a short and concise title")}
           <input
             type="text"
@@ -94,41 +98,11 @@ const PlacesPage = () => {
             placeholder="Address, e.g. My Lovely Apartment"
           />
           {inputInfo("Photos", "Add photos of your place, more is better!")}
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              name="photoLink"
-              value={input.photoLink}
-              onChange={handleChange}
-              placeholder="Add using a link"
-            />
-            <button
-              onClick={addPhotoLink}
-              className="h-11 px-2 bg-third border border-gray-600 text-gray-300 rounded-2xl mb-2 "
-            >
-              Add&nbsp;Photo
-            </button>
-          </div>
-          <div className="grid grid-cols-3 xl:grid-cols-4 mb-2 gap-2">
-            {input.photos.length > 0 &&
-              input.photos.map((photo, index) => (
-                <div key={index}>
-                  <img
-                    className="h-36 w-full rounded-2xl object-cover"
-                    src={"http://localhost:3000/routes/uploads/" + photo}
-                  />
-                </div>
-              ))}
-            <label className="h-36 cursor-pointer py-4 xl:px-2 bg-third border border-gray-600 text-gray-300 rounded-xl flex justify-center items-center gap-2">
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                onChange={uploadPhoto}
-              />
-              <UploadIcon className="w-6 stroke-2" /> Upload
-            </label>
-          </div>
+          <PhotoUpload
+            photoLink={input.photoLink}
+            photoFiles={input.photos}
+            onInput={setInput}
+          />
           {inputInfo("Description", "Add a full description of your place")}
           <textarea
             type="text"
@@ -184,6 +158,11 @@ const PlacesPage = () => {
             </div>
           </div>
           <button className="primary my-4">Save</button>
+          {msg.error && (
+            <div className="text-center py-2 mb-2 rounded-2xl bg-red-900 mx-auto">
+              {msg.msg}
+            </div>
+          )}
         </form>
       )}
     </div>
