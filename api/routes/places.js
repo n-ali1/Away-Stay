@@ -5,8 +5,17 @@ const jwt = require("jsonwebtoken");
 
 const jwtSecret = "hf984yiunojdww90iu03u83hger89h4un498";
 
-// POST /add_place- add place from form filled
-router.post("/", async (req, res) => {
+// GET - /places - list saved places
+router.get("/", async (req, res) => {
+  const { token } = req.cookies;
+  jwt.verify(token, jwtSecret, {}, async (err, user) => {
+    const {id} = user;
+    res.json(await Place.find({owner: id}))
+  })
+});
+
+// POST /places/add - add place from form filled
+router.post("/add", async (req, res) => {
   const { token } = req.cookies;
 
   jwt.verify(token, jwtSecret, {}, async (err, user) => {
